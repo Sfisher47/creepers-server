@@ -23,7 +23,7 @@ module.exports = {
 
     list: (req, res) => {
         if(!req.auth || !isAdmin(req.auth.profil)) {
-            return res.status(403).json(_403('forbidden'));
+            return res.status(200).json(_401('Trace::list: unauthorized'));
         }
 
         console.log(req.query);
@@ -39,13 +39,13 @@ module.exports = {
         })
         .catch(err => {
             console.log(err);
-            return res.status(500).json(_500('unable to get data'));
+            return res.status(200).json(_500('Trace::list: unable to get data'));
         })
     },
 
     read: (req, res) => {
         if(!req.auth || !isAdmin(req.auth.profil)) {
-            return res.status(403).json(_403('forbidden'));
+            return res.status(200).json(_401('Trace::read: unauthorized'));
         }
 
         const id = req.params.id;
@@ -60,13 +60,13 @@ module.exports = {
         })
         .catch(err => {
             console.log(err);
-            return res.status(500).json(_500('unable to get data'));
+            return res.status(200).json(_500('Trace::read: unable to get data'));
         })
     },
 
     delete: (req, res) => {
         if(!req.auth || !isAdmin(req.auth.profil)) {
-            res.status(403).json(_403('forbidden'));
+            res.status(200).json(_401('Trace::delete: unauthorized'));
         }
 
         const id = req.params.id;        
@@ -78,17 +78,17 @@ module.exports = {
         })
         .then((result) => {            
             if(!result) {
-                return res.status(404).json(_404('trace not exists'));
+                return res.status(200).json(_404('Trace::delete: trace not exists'));
             }
 
             result.destroy()
             .then((deleted) =>{
-                return res.status(200).json(_200('deleted successfuly'));
+                return res.status(200).json(_200('Trace::delete: deleted successfuly'));
             })
         })
         .catch(err => {
             console.log(err);
-            return res.status(500).json(_500('unable to delete'));
+            return res.status(200).json(_500('Trace::delete: unable to delete'));
         })
 
     },
@@ -123,7 +123,7 @@ module.exports = {
                     city: data.city,
                     contry: data.country,
                     continent: data.continent,
-                    user_agent: req.headers.user_agent,
+                    user_agent: req.headers["user-agent"],
                     latitude: data.latitude,
                     longitude: data.longitude,
                 })
@@ -132,14 +132,14 @@ module.exports = {
                 })
                 .catch((err)=>{
                     console.log(err);
-                    return res.status(500).json(_500('unable to create'));
+                    return res.status(200).json(_500('@trace: unable to create'));
                 });
 
                 next();
             })
             .catch(err => {
                 console.log(err);
-                return res.status(500).json(_500('unable to create'));
+                return res.status(200).json(_500('@trace: unable to find data'));
             })
             
         });

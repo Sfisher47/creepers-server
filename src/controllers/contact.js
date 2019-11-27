@@ -1,8 +1,13 @@
 "use strict";
 
 // Imports
+const Sequelize = require('sequelize');
 const Contact = require('../models/contact.model');
 const {_200, _400, _401, _403, _404, _500} = require('../include');
+
+// Constantes
+const EMAIL_REGEX = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+const PHONE_REGEX = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/;
 
 
 module.exports = {
@@ -19,19 +24,20 @@ module.exports = {
 
     list: (req, res) => {
         if(!req.auth) {
-            return res.status(403).json(_403('forbidden'));
+            return res.status(200).json(_401('unauthorized'));
         }
 
         console.log(req.query);
         const limit = req.query.limit;
         const offset = req.query.offset;
 
+        const host = req.protocol + '://' + req.get('host') + '/';
+
         Contact.findAll({
-            attributes: {
-                include: [
-                    [Sequelize.fn('_url', req.headers.host, Sequelize.col('photo')), 'photo_url']
-                ]
-            },
+            attributes: [
+                'id', 'name', 'email', 'photo', 'telephone',
+                [Sequelize.fn('CONCAT', host, Sequelize.col('photo')), 'photo_url']
+            ],
             where: {
                 user_id: req.auth.id,
             },
@@ -43,23 +49,24 @@ module.exports = {
         })
         .catch(err => {
             console.log(err);
-            return res.status(500).json(_500('unable to get contacts'));
+            return res.status(200).json(_500('unable to get contacts'));
         })
     },
 
     read: (req, res) => {
         if(!req.auth) {
-            res.status(403).json(_403('forbidden'));
+            res.status(200).json(_401('unauthorized'));
         }
 
         const id = req.params.id;
 
+        const host = req.protocol + '://' + req.get('host') + '/';
+
         Contact.findOne({
-            attributes: {
-                include: [
-                    [Sequelize.fn('CONCAT', req.headers.host, Sequelize.col('photo')), 'photo_url']
-                ]
-            },
+            attributes: [
+                'id', 'name', 'email', 'photo', 'telephone',
+                [Sequelize.fn('CONCAT', host, Sequelize.col('photo')), 'photo_url']
+            ],
             where: {
                 id: id,
                 user_id: req.auth.id,
@@ -70,13 +77,13 @@ module.exports = {
         })
         .catch(err => {
             console.log(err);
-            return res.status(500).json(_500('unable to get contact'));
+            return res.status(200).json(_500('unable to get contact'));
         })
     },
 
     create: (req, res) => {
         if(!req.auth) {
-            return res.status(403).json(_403('forbidden'));
+            return res.status(200).json(_401('unauthorized'));
         }        
          
         const name = req.body.name;
@@ -95,31 +102,35 @@ module.exports = {
         })
         .then(contact => {
             if(contact) {
-                return res.status(500).json(_500('contact already exists with this phone number'))
+                return res.status(200).json(_500('contact already exists with this phone number'))
             }
 
             Contact.create({
                 name,
                 email,
                 photo,
-                telephone,
-                user_id: req.auth.id
+                telephone
             })
             .then((inserted) => {
-                return res.status(200).json({ userId: inserted.id });
+                inserted.setUser(req.auth.id);
+                return res.status(200).json({ contactId: inserted.id });
             });
         })
         .catch(err => {
             console.log(err);
-            return res.status(500).json(_500('unable to create contact'));
+            return res.status(200).json(_500('unable to create contact'));
         })
     },
 
     update: (req, res) => {        
         if(!req.auth) {
-            res.status(403).json(_403('forbidden'));
+            res.status(200).json(_401('unauthorized'));
         }
         
+        const name = req.body.name;
+        const photo = req.body.photo;
+        const email = req.body.email;
+
         // Verifier toutes les donnees
         _validateUpdate(res, req.body);
 
@@ -133,27 +144,28 @@ module.exports = {
         })
         .then((result) => {            
             if(!result) {
-                return res.status(404).json(_404('contact not exists'));
+                return res.status(200).json(_404('contact not exists'));
             }
 
             result.update({
                 name: name ? name : result.name,
-                email: email ? email : result.email
+                email: email ? email : result.email,
+                photo: photo ? photo : result.photo
             })            
             .then((updated) =>{
-                return res.status(200).json({userId: updated.id});
+                return res.status(200).json({contactId: updated.id});
             })
         })
         .catch(err => {
             console.log(err);
-            return res.status(500).json(_500('unable to verify contact'));
+            return res.status(200).json(_500('unable to verify contact'));
         })
 
     },
 
     delete: (req, res) => {
         if(!req.auth) {
-            res.status(403).json(_403('forbidden'));
+            res.status(200).json(_401('unauthorized'));
         }
 
         const id = req.params.id;
@@ -166,7 +178,7 @@ module.exports = {
         })
         .then((result) => {            
             if(!result) {
-                return res.status(404).json(_404('contact not exists'));
+                return res.status(200).json(_404('contact not exists'));
             }
 
             result.destroy()           
@@ -176,14 +188,10 @@ module.exports = {
         })
         .catch(err => {
             console.log(err);
-            return res.status(500).json(_500('unable to delete contact'));
+            return res.status(200).json(_500('unable to delete contact'));
         })
 
     },
-}
-
-const _url = (host, data) => {
-    return host + '/' + data
 }
 
 const _validateCreate = (res, data) => {
@@ -192,19 +200,19 @@ const _validateCreate = (res, data) => {
     const telephone = data.telephone;
 
     if(name == null || email == null, telephone == null) {
-        return res.status(400).json(_400('missing parameters'))
+        return res.status(200).json(_400('missing parameters'))
     }
 
     if(name.length < 3 || name.length > 50 ) {
-        return res.status(400).json(_400('too short or too long name'));
+        return res.status(200).json(_400('too short or too long name'));
     }
 
     if(!EMAIL_REGEX.test(email)) {
-        return res.status(400).json(_400('email is incorrect'));
+        return res.status(200).json(_400('email is incorrect'));
     }
 
     if(!PHONE_REGEX.test(telephone)) {
-        return res.status(400).json(_400('telephone is incorrect'));
+        return res.status(200).json(_400('telephone is incorrect'));
     }
 }
 
@@ -213,10 +221,10 @@ const _validateUpdate = (res, data) => {
     const email = data.email;
 
     if(name.length < 3 || name.length > 15 ) {
-        return res.status(400).json(_400('too short or too long name'));
+        return res.status(200).json(_400('too short or too long name'));
     }
 
     if(email.length > 0 && !EMAIL_REGEX.test(email)) {
-        return res.status(400).json(_400('email is incorrect'));
+        return res.status(200).json(_400('email is incorrect'));
     }
 }

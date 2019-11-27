@@ -19,10 +19,10 @@ module.exports = {
         try {
             fs.unlinkSync('./uploads/' + file)
             //file removed
-            res.status(200).json(_200('file removed successfuly'));
+            res.status(200).json(_200('Media::delete: file removed successfuly'));
         } catch(err) {
             console.error(err);
-            res.status(500).json(_500('unable to delete file'));
+            res.status(200).json(_500('Media::delete: unable to delete file'));
         }
     },
 }

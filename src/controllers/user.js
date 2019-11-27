@@ -9,7 +9,7 @@ const {_200, _400, _401, _403, _404, _500, genToken, isAdmin} = require('../incl
 
 // Constantes
 const EMAIL_REGEX = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-const PHONE_REGEX = /^[0-9]*$/;
+const PHONE_REGEX = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/;
 
 
 module.exports = {
@@ -25,7 +25,6 @@ module.exports = {
 
     //POST: users/login
     login: (req, res) => {
-        console.log('=== request: /users/login');
 
         // Recuperer les donnees
         const telephone = req.body.telephone;
@@ -33,7 +32,7 @@ module.exports = {
 
         // Verifier toutes les donnees
         if(telephone == null || password == null) {
-            return res.status(400).json(_400('missing parameters'))
+            return res.status(200).json(_400('missing parameters'))
         }
 
         // Verifier si l'utilisateur est existant
@@ -42,12 +41,12 @@ module.exports = {
         })
         .then((user) => {
             if(!user) {
-                return res.status(403).json(_403('user not exist'));
+                return res.status(200).json(_403('user not exist'));
             }
 
             bcrypt.compare(password, user.password, (err, done) =>{
                 if(!done) {
-                    return res.status(401).json(_401('forbidden'));
+                    return res.status(200).json(_401('bad password'));
                 }
 
                 return res.status(200).json({id: user.id, token: genToken(user)});                
@@ -58,7 +57,6 @@ module.exports = {
 
     //POST: users/register
     register: (req, res) => {
-        console.log('=== request: /users/register');
 
         // Recuperer les donnees
         const name = req.body.name;
@@ -76,7 +74,7 @@ module.exports = {
         })
         .then((user) => {
             if(user) {
-                return res.status(500).json(_500('user alrady exists'));
+                return res.status(200).json(_500('user alrady exists'));
             }
 
             bcrypt.hash(password, 5, (err, hash) => {
@@ -92,19 +90,19 @@ module.exports = {
                 })
                 .catch((err)=>{
                     console.log(err);
-                    return res.status(500).json(_500('unable to create user'));
+                    return res.status(200).json(_500('unable to create user'));
                 });
             });
         })
         .catch((err) =>{
             console.log(err);
-            return res.status(500).json(_500('unable to verify user'));
+            return res.status(200).json(_500('unable to verify user'));
         });
     },
 
     getUser: (req, res) => {
         if(!req.auth) {
-            return res.status(403).json(_403('forbidden'));
+            return res.status(200).json(_401('Unauthorized'));
         }
 
         User.findOne({
@@ -116,13 +114,13 @@ module.exports = {
         })
         .catch(err => {
             console.log(err);
-            return res.status(500).json(_500('unable to verify user'));
+            return res.status(200).json(_500('unable to verify user'));
         })
     },
 
     setUser: (req, res) => {
         if(!req.auth) {
-            return res.status(403).json(_403('forbidden'));
+            return res.status(200).json(_401('unauthorized'));
         }
 
         // Recuperer les donnees
@@ -146,13 +144,13 @@ module.exports = {
         })
         .catch(err => {
             console.log(err);
-            return res.status(500).json(_500('unable to verify user'));
+            return res.status(200).json(_500('unable to verify user'));
         })
     },
     
     list: (req, res) => {
         if(!req.auth || !isAdmin(req.auth.profil)) {
-            res.status(403).json(_403('forbidden'));
+            res.status(200).json(_401('unauthorized'));
         }
 
         const limit = req.query.limit;
@@ -168,13 +166,13 @@ module.exports = {
         })
         .catch(err => {
             console.log(err);
-            return res.status(500).json(_500('unable to get users'));
+            return res.status(200).json(_500('unable to get users'));
         })
     },
 
     read: (req, res) => {
         if(!req.auth || !isAdmin(req.auth.profil)) {
-            return res.status(403).json(_403('forbidden'));
+            return res.status(200).json(_401('unauthorized'));
         }
 
         const id = req.params.id;
@@ -190,13 +188,13 @@ module.exports = {
         })
         .catch(err => {
             console.log(err);
-            return res.status(500).json(_500('unable to get users'));
+            return res.status(200).json(_500('unable to get users'));
         })
     },
 
     create: (req, res) => {
         if(!req.auth || !isAdmin(req.auth.profil)) {
-            return res.status(403).json(_403('forbidden'));
+            return res.status(200).json(_401('unauthorized'));
         }
 
         this.register(req, res);
@@ -204,15 +202,15 @@ module.exports = {
 
     update: (req, res) => {        
         if(!req.auth || !isAdmin(req.auth.profil)) {
-            return res.status(403).json(_403('forbidden'));
+            return res.status(200).json(_401('unauthorized'));
         }
 
-        return res.status(501).json(_501('not implemented'));
+        return res.status(200).json(_501('not implemented'));
     },
 
     delete: (req, res) => {
         if(!req.auth || !isAdmin(req.auth.profil)) {
-            return res.status(403).json(_403('forbidden'));
+            return res.status(200).json(_401('unauthorized'));
         }
 
         const id = req.params.id;
@@ -224,7 +222,7 @@ module.exports = {
         })
         .then((user) => {
             if(!user) {
-                return res.status(404).json(_404('user not exists'));
+                return res.status(200).json(_404('user not exists'));
             }
 
             user.destroy()           
@@ -234,7 +232,7 @@ module.exports = {
         })
         .catch(err => {
             console.log(err);
-            return res.status(500).json(_500('unable to delete contact'));
+            return res.status(200).json(_500('unable to delete contact'));
         })
 
     },
@@ -248,19 +246,19 @@ const _validateRegister = (res, data) => {
     const password = data.password;
 
     if(name == null || email == null, telephone == null || password == null) {
-        return res.status(400).json(_400('missing parameters'))
+        return res.status(200).json(_400('missing parameters'))
     }
 
     if(name.length < 3 || name.length > 50 ) {
-        return res.status(400).json(_400('too short or too long name'));
+        return res.status(200).json(_400('too short or too long name'));
     }
 
     if(!EMAIL_REGEX.test(email)) {
-        return res.status(400).json(_400('email is incorrect'));
+        return res.status(200).json(_400('email is incorrect'));
     }
 
     if(!PHONE_REGEX.test(telephone)) {
-        return res.status(400).json(_400('telephone is incorrect'));
+        return res.status(200).json(_400('telephone is incorrect'));
     }
 }
 
@@ -269,10 +267,10 @@ const _validateSetUser = (res, data) => {
     const email = data.email;
 
     if(name.length < 3 || name.length > 15 ) {
-        return res.status(400).json(_400('too short or too long name'));
+        return res.status(200).json(_400('too short or too long name'));
     }
 
     if(email.length > 0 && !EMAIL_REGEX.test(email)) {
-        return res.status(400).json(_400('email is incorrect'));
+        return res.status(200).json(_400('email is incorrect'));
     }
 }

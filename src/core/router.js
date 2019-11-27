@@ -49,7 +49,7 @@ router.get('/contacts/:id', auth, contactsController.read);
 router.post('/contacts', auth, contactsController.create);
 
 // POST: contacts/update
-router.put('/contacts/:id', auth, contactsController.create);
+router.put('/contacts/:id', auth, contactsController.update);
 
 // DELETE: contacts/delete
 router.delete('/contacts/:id', auth, contactsController.delete);
