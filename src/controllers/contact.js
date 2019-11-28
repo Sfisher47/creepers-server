@@ -18,6 +18,7 @@ module.exports = {
             name: "",
             email: "",
             photo: "",
+            favorite: "",
             telephone: ""
         });
     },
@@ -35,7 +36,7 @@ module.exports = {
 
         Contact.findAll({
             attributes: [
-                'id', 'name', 'email', 'photo', 'telephone',
+                'id', 'name', 'email', 'favorite', 'photo', 'telephone',
                 [Sequelize.fn('CONCAT', host, Sequelize.col('photo')), 'photo_url']
             ],
             where: {
@@ -64,7 +65,7 @@ module.exports = {
 
         Contact.findOne({
             attributes: [
-                'id', 'name', 'email', 'photo', 'telephone',
+                'id', 'name', 'email', 'favorite', 'photo', 'telephone',
                 [Sequelize.fn('CONCAT', host, Sequelize.col('photo')), 'photo_url']
             ],
             where: {
@@ -130,6 +131,7 @@ module.exports = {
         const name = req.body.name;
         const photo = req.body.photo;
         const email = req.body.email;
+        const favorite = req.body.favorite;
 
         // Verifier toutes les donnees
         _validateUpdate(res, req.body);
@@ -150,7 +152,8 @@ module.exports = {
             result.update({
                 name: name ? name : result.name,
                 email: email ? email : result.email,
-                photo: photo ? photo : result.photo
+                photo: photo ? photo : result.photo,
+                favorite: favorite ? favorite : result.favorite
             })            
             .then((updated) =>{
                 return res.status(200).json({contactId: updated.id});

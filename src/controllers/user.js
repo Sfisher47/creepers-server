@@ -100,6 +100,21 @@ module.exports = {
         });
     },
 
+    checkPhoneAvailable: (req, res) => {
+        User.findOne({
+            attributes: ['id'],
+            where: {telephone: req.body.telephone}
+        })
+        .then(result => {
+            if(!result) return res.status(200).json(_404('User::checkPhoneAvailable: not found'));
+            return res.status(200).json({count: 1})
+        })
+        .catch(err => {
+            console.log(err);
+            return res.status(200).json(_500('User::checkPhoneAvailable: unable to check phone'));
+        })
+    },
+
     getUser: (req, res) => {
         if(!req.auth) {
             return res.status(200).json(_401('Unauthorized'));

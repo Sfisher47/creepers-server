@@ -23,10 +23,15 @@ Contact.init({
     email: {
         type: DataTypes.STRING(100),
     },
+    favorite: {
+        type: DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 0
+    },
     photo: {
         type: DataTypes.STRING(200),
         allowNull: true
-    },
+    }
     
 }, { underscored: true, sequelize, modelName: 'contacts' });
 

@@ -20,6 +20,9 @@ router.post('/users/login', usersController.login);
 // POST: users/register
 router.post('/users/register', usersController.register);
 
+// POST: users/phone/available
+router.post('/users/phone/available', usersController.checkPhoneAvailable);
+
 // GET: users/me
 router.get('/users/me', auth, usersController.getUser);
 
