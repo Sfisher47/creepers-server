@@ -5,6 +5,8 @@ var router = require('./src/core/router');
 var db = require('./src/core/db');
 require('./src/bootstrap')();
 
+const usersController = require('./src/controllers/user');
+
 // Definir l'application
 var app = express();
 app.use(cors());
@@ -21,6 +23,9 @@ router.get('/', (req, res) => {
 
 // Demarrer le serveur
 app.listen(8000, () => {
-    db.sync().then(() => { console.log('Connexion MySQL avec succes !') });
+    db.sync().then(() => {
+        usersController.createAdmin();
+        console.log('Connexion MySQL avec succes !') 
+    });
     console.log('Server listen http://localhost:8000 ...');
 })

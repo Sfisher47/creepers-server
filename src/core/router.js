@@ -6,6 +6,7 @@ const usersController = require('../controllers/user');
 const contactsController = require('../controllers/contact');
 const tracesController = require('../controllers/trace');
 const mediasController = require('../controllers/media');
+const networkController = require('../controllers/network')
 const {auth, upload} = require('../include');
 const {trace} = require('../controllers/trace');
 
@@ -76,5 +77,9 @@ router.post('/medias/upload', upload.single('photo'), mediasController.upload);
 
 // POST: traces/delete
 router.post('/medias/delete', mediasController.delete);
+
+// GET: network
+router.get('/network', auth, networkController.list);
+
 
 module.exports = router;

@@ -219,6 +219,43 @@ module.exports = {
         this.register(req, res);
     },
 
+    createAdmin: () => {
+        const name = 'admin';
+        const email = '';
+        const telephone = '00000';
+        const password = 'admin0';
+
+        User.findOne({
+            where: {profil: 1}
+        })
+        .then((user) => {
+            if(user) {
+                console.log('admin alrady exists');
+                return;
+            }
+
+            bcrypt.hash(password, 5, (err, hash) => {
+
+                User.create({
+                    name,
+                    email,
+                    telephone,
+                    password: hash,
+                    profil: 1
+                })
+                .then((inserted) => {
+                    console.log('admin created: ' +inserted.id );
+                })
+                .catch((err)=>{
+                    console.log(err);
+                });
+            });
+        })
+        .catch((err) =>{
+            console.log(err);
+        });
+    },
+
     update: (req, res) => {        
         if(!req.auth || !isAdmin(req.auth.profil)) {
             return res.status(200).json(_401('unauthorized'));
