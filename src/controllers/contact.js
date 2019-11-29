@@ -153,7 +153,7 @@ module.exports = {
                 name: name ? name : result.name,
                 email: email ? email : result.email,
                 photo: photo ? photo : result.photo,
-                favorite: favorite ? favorite : result.favorite
+                favorite:  favorite != undefined ? favorite : result.favorite
             })            
             .then((updated) =>{
                 return res.status(200).json({contactId: updated.id});
@@ -223,11 +223,11 @@ const _validateUpdate = (res, data) => {
     const name = data.name;
     const email = data.email;
 
-    if(name.length < 3 || name.length > 15 ) {
+    if(name && (name.length < 3 || name.length > 15) ) {
         return res.status(200).json(_400('too short or too long name'));
     }
 
-    if(email.length > 0 && !EMAIL_REGEX.test(email)) {
+    if(email && email.length > 0 && !EMAIL_REGEX.test(email)) {
         return res.status(200).json(_400('email is incorrect'));
     }
 }

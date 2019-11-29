@@ -10,7 +10,11 @@ module.exports = {
     upload: (req, res) => {
         //console.log(`nouveau upload = ${req.file.filename}\n`);
         //console.log(req.file);
-        res.status(200).json({file: req.file.filename});
+        const host = req.protocol + '://' + req.get('host') + '/';
+        res.status(200).json({
+            photo: req.file.filename,
+            photo_url: host + req.file.filename
+        });
     },
 
     delete: (req, res) => {

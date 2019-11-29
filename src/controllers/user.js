@@ -49,7 +49,11 @@ module.exports = {
                     return res.status(200).json(_401('bad password'));
                 }
 
-                return res.status(200).json({id: user.id, token: genToken(user)});                
+                return res.status(200).json({
+                    id: user.id, 
+                    profil: user.profil, 
+                    token: genToken(user)
+                });                
             })
 
         })
