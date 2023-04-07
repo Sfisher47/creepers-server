@@ -11,18 +11,19 @@ module.exports = {
 
     list: (req, res) => {
 
-        const host = req.protocol + '://' + req.get('host') + '/';
+        const host = req.protocol + '://' + req.get('host') + '/uploads/';
 
         Contact.findAll({
             attributes: [
                 'id',
+				'name',
                 'telephone', 
                 'photo', 
                 [Sequelize.fn('CONCAT', host, Sequelize.col('photo')), 'photo_url']
             ],
             include: {
                 model: User, 
-                attributes: ['id', 'name']
+                attributes: ['id', 'name', 'telephone']
             }
         })
         .then((result) => {

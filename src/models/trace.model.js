@@ -30,7 +30,7 @@ Trace.init({
         type: DataTypes.STRING(50),
     },
     user_agent: {
-        type: DataTypes.STRING(50),
+        type: DataTypes.STRING(500),
     },
     latitude: {
         type: DataTypes.DOUBLE,

@@ -1,20 +1,24 @@
-var express = require('express');
-var cors = require('cors');
+const express = require('express');
+const cors = require('cors');
 
-var router = require('./src/core/router');
-var db = require('./src/core/db');
+const router = require('./src/core/router');
+const db = require('./src/core/db');
+const User = require('./src/models/user.model');
 require('./src/bootstrap')();
 
 const usersController = require('./src/controllers/user');
+
 
 // Definir l'application
 var app = express();
 app.use(cors());
 app.use(express.json()) // for parsing application/json
 app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
-app.use(express.static('uploads'));
+app.use('/uploads', express.static(__dirname + '/uploads'));
 
 app.use('/api/v1', router);
+
+app.enable('trust proxy');
 
 // GET: /
 router.get('/', (req, res) => {
@@ -22,10 +26,18 @@ router.get('/', (req, res) => {
 })
 
 // Demarrer le serveur
-app.listen(8000, () => {
+app.listen(8080, () => {
     db.sync().then(() => {
-        usersController.createAdmin();
-        console.log('Connexion MySQL avec succes !') 
+        User.findOne({
+            attributes: ['id', 'name', 'telephone', 'email'],
+            where: {name: 'admin'}
+        }).then((user) => {
+            if(!user) usersController.createAdmin();
+        }).catch((err) => {
+            console.log(err);
+        })
+
+        console.log('Connexion à la base de données avec succes !') 
     });
-    console.log('Server listen http://localhost:8000 ...');
+    console.log('Server listen http://localhost:8080 ...');
 })

@@ -32,12 +32,13 @@ module.exports = {
         const limit = req.query.limit;
         const offset = req.query.offset;
 
-        const host = req.protocol + '://' + req.get('host') + '/';
+        const host = req.protocol + '://' + req.get('host') + '/uploads/';
 
         Contact.findAll({
             attributes: [
                 'id', 'name', 'email', 'favorite', 'photo', 'telephone',
-                [Sequelize.fn('CONCAT', host, Sequelize.col('photo')), 'photo_url']
+                [Sequelize.literal(`'${host}' || photo`), 'photo_url']
+                //[Sequelize.fn('CONCAT', host, Sequelize.col('photo')), 'photo_url']
             ],
             where: {
                 user_id: req.auth.id,
@@ -61,12 +62,13 @@ module.exports = {
 
         const id = req.params.id;
 
-        const host = req.protocol + '://' + req.get('host') + '/';
+        const host = req.protocol + '://' + req.get('host') + '/uploads/';
 
         Contact.findOne({
             attributes: [
                 'id', 'name', 'email', 'favorite', 'photo', 'telephone',
-                [Sequelize.fn('CONCAT', host, Sequelize.col('photo')), 'photo_url']
+                [Sequelize.literal(`'${host}' || photo`), 'photo_url']
+                //[Sequelize.fn('CONCAT', host, Sequelize.col('photo')), 'photo_url']
             ],
             where: {
                 id: id,
@@ -103,7 +105,9 @@ module.exports = {
         })
         .then(contact => {
             if(contact) {
-                return res.status(200).json(_500('contact already exists with this phone number'))
+                let d = _500('contact already exists with this phone number')                
+		        d.contact_exists = 1;
+                return res.status(200).json(d)
             }
 
             Contact.create({

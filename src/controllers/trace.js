@@ -128,14 +128,14 @@ module.exports = {
                     longitude: data.longitude,
                 })
                 .then((inserted) => {
-                    next();
+                    return next();
                 })
                 .catch((err)=>{
                     console.log(err);
                     return res.status(200).json(_500('@trace: unable to create'));
                 });
 
-                next();
+                return next();
             })
             .catch(err => {
                 console.log(err);
